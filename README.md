@@ -84,6 +84,7 @@ python -c "from huggingface_hub import snapshot_download; snapshot_download(repo
 核心逻辑（示意）：
 
 ```python
+import io
 import torch
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import Response
@@ -105,13 +106,26 @@ class Req(BaseModel):
 @app.post("/generate")
 def generate(req: Req, x_api_key: str = Header(default="")):
     if x_api_key != "YOUR_API_KEY":
-        raise HTTPException(401, "Invalid key")
+        raise HTTPException(status_code=401, detail="Invalid key")
+
     pipe = inference_runtime.load_pipeline(MODEL, local_files_only=True)
-    image = pipe(req.prompt, width=req.width, height=req.height,
-                 num_inference_steps=req.steps,
-                 guidance_scale=req.guidance_scale,
-                 generator=torch.Generator("cpu").manual_seed(req.seed)).images[0]
-    buf = io.BytesIO(); image.save(buf, format="PNG")
+
+    generator = None
+    if req.seed >= 0:
+        generator = torch.Generator(device="cpu")
+        generator.manual_seed(req.seed)
+
+    image = pipe(
+        req.prompt,
+        width=req.width,
+        height=req.height,
+        num_inference_steps=req.steps,
+        guidance_scale=req.guidance_scale,
+        generator=generator,
+    ).images[0]
+
+    buf = io.BytesIO()
+    image.save(buf, format="PNG")
     return Response(content=buf.getvalue(), media_type="image/png")
 ```
 
