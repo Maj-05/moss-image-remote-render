@@ -5,7 +5,7 @@
 >
 > **本仓库只包含方案思路与部署步骤，不包含任何真实部署环境、密钥或本地文件。**
 >
-> 📄 **API 调用用法示意请见 [API_USAGE.md](API_USAGE.md)**
+> 📄 **API 调用用法示意：** [API_USAGE.md](API_USAGE.md) · [API_CALL.md](API_CALL.md)
 
 ---
 
